@@ -1,5 +1,6 @@
+// src/renderer/App.tsx
+
 import { useState, useEffect } from 'react'
-import { format } from 'date-fns'
 
 export default function App() {
   const [notes, setNotes] = useState<Note[]>([])
@@ -7,6 +8,7 @@ export default function App() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
+  const [theme, setTheme] = useState('light')  // 默认白天模式
 
   // 获取所有笔记
   const fetchNotes = async () => {
@@ -46,7 +48,6 @@ export default function App() {
       }
       // 重新获取所有笔记以更新列表
       await fetchNotes()
-      
     } catch (error) {
       console.error('Failed to save note:', error)
     } finally {
@@ -68,8 +69,25 @@ export default function App() {
     }
   }
 
+  // 切换主题函数
+  const toggleTheme = () => {
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'))
+  }
+
+  // 根据主题设置容器类名
+  const containerClass =
+    theme === 'light'
+      ? 'flex h-screen bg-gray-100 text-gray-900'
+      : 'flex h-screen bg-gray-900 text-gray-100'
+
+  // 根据主题调整输入框等组件的背景色（可以根据需要进一步优化）
+  const inputClass =
+    theme === 'light'
+      ? 'bg-gray-200 border border-gray-300'
+      : 'bg-gray-800 border border-gray-700'
+
   return (
-    <div className="flex h-screen bg-gray-900 text-gray-100">
+    <div className={containerClass}>
       {/* 左侧笔记列表 */}
       <div className="w-64 border-r border-gray-700 p-4 flex flex-col">
         <button
@@ -79,16 +97,23 @@ export default function App() {
         >
           New Note
         </button>
-        
+
+        {/* 主题切换按钮 */}
+        <button
+          onClick={toggleTheme}
+          className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg py-2 px-4 mb-4"
+          disabled={loading}
+        >
+          {theme === 'light' ? '切换到黑夜模式' : '切换到白天模式'}
+        </button>
+
         <div className="overflow-y-auto flex-1">
           {notes.map(note => (
             <div
               key={note.id}
               onClick={() => handleSelectNote(note.id)}
               className={`p-3 mb-2 rounded-lg cursor-pointer ${
-                selectedNote?.id === note.id 
-                  ? 'bg-gray-700' 
-                  : 'hover:bg-gray-800'
+                selectedNote?.id === note.id ? 'bg-gray-700' : 'hover:bg-gray-800'
               }`}
             >
               <h3 className="font-medium truncate">{note.title}</h3>
@@ -108,18 +133,18 @@ export default function App() {
           value={title}
           onChange={e => setTitle(e.target.value)}
           placeholder="Note title"
-          className="bg-gray-800 border border-gray-700 rounded-lg p-3 mb-4 w-full"
+          className={`${inputClass} rounded-lg p-3 mb-4 w-full`}
           disabled={loading}
         />
-        
+
         <textarea
           value={content}
           onChange={e => setContent(e.target.value)}
           placeholder="Write your note here..."
-          className="bg-gray-800 border border-gray-700 rounded-lg p-3 mb-4 flex-1 w-full resize-none"
+          className={`${inputClass} rounded-lg p-3 mb-4 flex-1 w-full resize-none`}
           disabled={loading}
         />
-        
+
         <button
           onClick={handleSaveNote}
           className="bg-green-600 hover:bg-green-700 text-white rounded-lg py-2 px-4 disabled:opacity-50"

@@ -91,7 +91,6 @@ function setupIpcHandlers() {
     }
   });
 }
-if (require2("electron-squirrel-startup")) app.quit();
 let mainWindow = null;
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -100,7 +99,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: join(__dirname, "../preload/index.mjs")
+      preload: join(__dirname, "../../dist-electron/preload/index.cjs")
     }
   });
   if (process.env.NODE_ENV === "development") {
@@ -110,52 +109,9 @@ function createWindow() {
     mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
 }
-ipcMain.handle("create-note", async (_, title, content) => {
-  try {
-    return database.createNote(title, content);
-  } catch (error) {
-    console.error("Error creating note:", error);
-    throw error;
-  }
-});
-ipcMain.handle("get-all-notes", async () => {
-  try {
-    return database.getAllNotes();
-  } catch (error) {
-    console.error("Error getting all notes:", error);
-    throw error;
-  }
-});
-ipcMain.handle("get-note", async (_, id) => {
-  try {
-    return database.getNote(id);
-  } catch (error) {
-    console.error("Error getting note:", error);
-    throw error;
-  }
-});
-ipcMain.handle("update-note", async (_, id, title, content) => {
-  try {
-    return database.updateNote(id, title, content);
-  } catch (error) {
-    console.error("Error updating note:", error);
-    throw error;
-  }
-});
-ipcMain.handle("delete-note", async (_, id) => {
-  try {
-    return database.deleteNote(id);
-  } catch (error) {
-    console.error("Error deleting note:", error);
-    throw error;
-  }
-});
 app.whenReady().then(() => {
   database.init();
   setupIpcHandlers();
-  createWindow();
-});
-app.whenReady().then(() => {
   createWindow();
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {

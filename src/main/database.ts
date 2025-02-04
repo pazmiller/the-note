@@ -11,7 +11,7 @@ export const database = {
     
     const dbPath = join(app.getPath('userData'), 'notes.db')
     db = new Database(dbPath)
-
+    
     db.exec(`
       CREATE TABLE IF NOT EXISTS notes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -1,3 +1,5 @@
+// src/preload/index.ts
+console.log('Preload loadedddddd');
 import { contextBridge, ipcRenderer } from 'electron'
 export type NotesAPI = {
   createNote: (title: string, content: string) => Promise<any>
@@ -8,17 +10,13 @@ export type NotesAPI = {
 }
 
 const api: NotesAPI = {
-  createNote: (title, content) => 
-    ipcRenderer.invoke('notes:create', title, content),
-  getAllNotes: () => 
-    ipcRenderer.invoke('notes:getAll'),
-  getNote: (id) => 
-    ipcRenderer.invoke('notes:get', id),
-  updateNote: (id, title, content) => 
-    ipcRenderer.invoke('notes:update', id, title, content),
-  deleteNote: (id) => 
-    ipcRenderer.invoke('notes:delete', id)
+  createNote: (title, content) => ipcRenderer.invoke('create-note', title, content),
+  getAllNotes: () => ipcRenderer.invoke('get-all-notes'),
+  getNote: (id) => ipcRenderer.invoke('get-note', id),
+  updateNote: (id, title, content) => ipcRenderer.invoke('update-note', id, title, content),
+  deleteNote: (id) => ipcRenderer.invoke('delete-note', id)
 }
+
 
 contextBridge.exposeInMainWorld('notesApi', api)
 

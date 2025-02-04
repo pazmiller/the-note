@@ -1,3 +1,4 @@
+// electron.vite.config.ts
 import { resolve } from 'path'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
 import react from '@vitejs/plugin-react'
@@ -33,7 +34,10 @@ export default defineConfig({
         input: {
           index: resolve(__dirname, 'src/preload/index.ts')
         },
-        external: ['electron', 'better-sqlite3', 'electron-squirrel-startup']
+        external: ['electron', 'better-sqlite3', 'electron-squirrel-startup'],
+        output: {
+          format: 'cjs'
+        }
       }
     }
   },
