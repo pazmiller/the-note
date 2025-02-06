@@ -6963,12 +6963,48 @@ var m = reactDomExports;
   client.createRoot = m.createRoot;
   client.hydrateRoot = m.hydrateRoot;
 }
+const RightClickMenu = ({ x: x2, y: y2, onClose, onEdit, onDelete }) => {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "div",
+    {
+      className: "absolute bg-white shadow-lg rounded-md z-50",
+      style: { left: x2, top: y2 },
+      onMouseLeave: onClose,
+      children: /* @__PURE__ */ jsxRuntimeExports.jsxs("ul", { className: "p-2", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "li",
+          {
+            className: "cursor-pointer px-4 py-2 hover:bg-gray-200",
+            onClick: onEdit,
+            children: "Edit"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "li",
+          {
+            className: "cursor-pointer px-4 py-2 hover:bg-gray-200",
+            onClick: onDelete,
+            children: "Delete"
+          }
+        )
+      ] })
+    }
+  );
+};
 function App() {
   const [notes, setNotes] = reactExports.useState([]);
   const [selectedNote, setSelectedNote] = reactExports.useState(null);
   const [title, setTitle] = reactExports.useState("");
   const [content, setContent] = reactExports.useState("");
   const [loading, setLoading] = reactExports.useState(false);
+  const [theme, setTheme] = reactExports.useState("light");
+  const [focusMode, setFocusMode] = reactExports.useState(false);
+  const [rightClickMenu, setRightClickMenu] = reactExports.useState({
+    visible: false,
+    x: 0,
+    y: 0,
+    note: null
+  });
   const fetchNotes = async () => {
     try {
       setLoading(true);
@@ -7008,6 +7044,10 @@ function App() {
     try {
       setLoading(true);
       const note = await window.notesApi.getNote(noteId);
+      if (!note) {
+        console.error(`Note with id ${noteId} not found`);
+        return;
+      }
       setSelectedNote(note);
       setTitle(note.title);
       setContent(note.content);
@@ -7017,8 +7057,83 @@ function App() {
       setLoading(false);
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex h-screen bg-gray-900 text-gray-100", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-64 border-r border-gray-700 p-4 flex flex-col", children: [
+  const handleMenu = (e, note) => {
+    e.preventDefault();
+    setRightClickMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      note
+    });
+  };
+  const closeRightClickMenu = () => {
+    setRightClickMenu({ visible: false, x: 0, y: 0, note: null });
+  };
+  const handleEditNote = () => {
+    if (rightClickMenu.note) {
+      handleSelectNote(rightClickMenu.note.id);
+    }
+  };
+  const handleDeleteNote = async () => {
+    if (rightClickMenu.note) {
+      try {
+        await window.notesApi.deleteNote(rightClickMenu.note.id);
+        await fetchNotes();
+      } catch (error) {
+        console.error("Failed to delete note:", error);
+      }
+    }
+  };
+  const toggleTheme = () => {
+    setTheme((prev) => prev === "light" ? "dark" : "light");
+  };
+  const enterFocusMode = async () => {
+    setFocusMode(true);
+  };
+  const exitFocusMode = async () => {
+    setFocusMode(false);
+  };
+  const handleExitFocusMode = async () => {
+    await handleSaveNote();
+    await exitFocusMode();
+  };
+  const containerClass = theme === "light" ? "flex h-screen bg-gray-100 text-gray-900" : "flex h-screen bg-gray-900 text-gray-100";
+  const inputClass = theme === "light" ? "bg-gray-200 border border-gray-300" : "bg-gray-800 border border-gray-700";
+  if (focusMode) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "fixed inset-0 flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: "relative shadow-lg rounded-md",
+        style: {
+          width: "100vw",
+          height: "100vh",
+          backgroundColor: theme === "light" ? "#fff" : "#333",
+          color: theme === "light" ? "#000" : "#fff"
+        },
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "textarea",
+            {
+              className: "w-full h-full p-2 resize-none",
+              value: content,
+              onChange: (e) => setContent(e.target.value)
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-2 overflow-auto h-full w-full", children: selectedNote ? selectedNote.content : "没有选中的笔记" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "button",
+            {
+              className: "absolute top-2 right-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded px-2 py-1",
+              onClick: handleExitFocusMode,
+              children: "返回"
+            }
+          )
+        ]
+      }
+    ) });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: containerClass, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-64 border-r border-gray-700 p-4 flex flex-col relative", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         "button",
         {
@@ -7028,11 +7143,21 @@ function App() {
           children: "New Note"
         }
       ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          onClick: toggleTheme,
+          className: "bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg py-2 px-4 mb-4",
+          disabled: loading,
+          children: theme === "light" ? "切换到黑夜模式" : "切换到白天模式"
+        }
+      ),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-y-auto flex-1", children: notes.map((note) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
         "div",
         {
           onClick: () => handleSelectNote(note.id),
-          className: `p-3 mb-2 rounded-lg cursor-pointer ${selectedNote?.id === note.id ? "bg-gray-700" : "hover:bg-gray-800"}`,
+          onContextMenu: (e) => handleMenu(e, note),
+          className: `p-3 mb-2 rounded-lg cursor-pointer ${selectedNote?.id === note.id ? "bg-gray-300" : "hover:bg-gray-600"}`,
           children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "font-medium truncate", children: note.title }),
             /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm text-gray-400 truncate", children: note.content }),
@@ -7040,7 +7165,15 @@ function App() {
           ]
         },
         note.id
-      )) })
+      )) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          className: "absolute bottom-4 left-4 bg-purple-500 hover:bg-purple-600 text-white rounded-lg py-1 px-3",
+          onClick: enterFocusMode,
+          children: "专注模式"
+        }
+      )
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 p-6 flex flex-col", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -7050,7 +7183,7 @@ function App() {
           value: title,
           onChange: (e) => setTitle(e.target.value),
           placeholder: "Note title",
-          className: "bg-gray-800 border border-gray-700 rounded-lg p-3 mb-4 w-full",
+          className: `${inputClass} rounded-lg p-3 mb-4 w-full`,
           disabled: loading
         }
       ),
@@ -7060,7 +7193,7 @@ function App() {
           value: content,
           onChange: (e) => setContent(e.target.value),
           placeholder: "Write your note here...",
-          className: "bg-gray-800 border border-gray-700 rounded-lg p-3 mb-4 flex-1 w-full resize-none",
+          className: `${inputClass} rounded-lg p-3 mb-4 flex-1 w-full resize-none`,
           disabled: loading
         }
       ),
@@ -7073,7 +7206,17 @@ function App() {
           children: loading ? "Saving..." : "Save"
         }
       )
-    ] })
+    ] }),
+    rightClickMenu.visible && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      RightClickMenu,
+      {
+        x: rightClickMenu.x,
+        y: rightClickMenu.y,
+        onClose: closeRightClickMenu,
+        onEdit: handleEditNote,
+        onDelete: handleDeleteNote
+      }
+    )
   ] });
 }
 client.createRoot(document.getElementById("root")).render(

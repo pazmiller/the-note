@@ -6,6 +6,8 @@ const api = {
   getAllNotes: () => electron.ipcRenderer.invoke("get-all-notes"),
   getNote: (id) => electron.ipcRenderer.invoke("get-note", id),
   updateNote: (id, title, content) => electron.ipcRenderer.invoke("update-note", id, title, content),
-  deleteNote: (id) => electron.ipcRenderer.invoke("delete-note", id)
+  deleteNote: (id) => electron.ipcRenderer.invoke("delete-note", id),
+  // 通过 IPC 调用主进程中注册的 "set-window-size" 事件
+  setWindowSize: (width, height) => electron.ipcRenderer.invoke("set-window-size", width, height)
 };
 electron.contextBridge.exposeInMainWorld("notesApi", api);

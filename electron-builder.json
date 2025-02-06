@@ -1,13 +1,14 @@
 {
   "appId": "com.electron.notes",
-  "productName": "Electron Notes",
+  "productName": "Essential Note",
   "directories": {
     "output": "release/${version}",
     "buildResources": "build"
   },
   "files": [
     "dist-electron/**/*",
-    "dist/**/*"
+    "dist/**/*",
+    "package.json"
   ],
   "win": {
     "target": [
@@ -15,12 +16,18 @@
         "target": "nsis",
         "arch": ["x64"]
       }
-    ]
+    ],
+    "icon": "./build/BYZ.ico",
+    "certificateFile": "./build/note-test-certificate.pfx",
+    "certificatePassword": "YourPassword"
   },
-  "mac": {
-    "target": ["dmg"]
+  "nsis": {
+    "oneClick": false,
+    "perMachine": true,
+    "allowToChangeInstallationDirectory": true
   },
   "linux": {
-    "target": ["AppImage"]
+    "target": ["AppImage"],
+    "icon": "build"
   }
 }

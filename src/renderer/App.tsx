@@ -1,6 +1,6 @@
 // src/renderer/App.tsx
-
 import { useState, useEffect } from 'react'
+import RightClickMenu from './components/RightClickMenu'
 
 export default function App() {
   const [notes, setNotes] = useState<Note[]>([])
@@ -8,7 +8,19 @@ export default function App() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(false)
-  const [theme, setTheme] = useState('light')  // 默认白天模式
+  const [theme, setTheme] = useState('light')
+  const [focusMode, setFocusMode] = useState(false)
+  const [rightClickMenu, setRightClickMenu] = useState<{
+    visible: boolean
+    x: number
+    y: number
+    note: Note | null
+  }>({
+    visible: false,
+    x: 0,
+    y: 0,
+    note: null,
+  })
 
   // 获取所有笔记
   const fetchNotes = async () => {
@@ -23,7 +35,6 @@ export default function App() {
     }
   }
 
-  // 组件加载时获取笔记
   useEffect(() => {
     fetchNotes()
   }, [])
@@ -36,17 +47,13 @@ export default function App() {
 
   const handleSaveNote = async () => {
     if (!title.trim()) return
-
     try {
       setLoading(true)
       if (selectedNote) {
-        // 更新现有笔记
         await window.notesApi.updateNote(selectedNote.id, title, content)
       } else {
-        // 创建新笔记
         await window.notesApi.createNote(title, content)
       }
-      // 重新获取所有笔记以更新列表
       await fetchNotes()
     } catch (error) {
       console.error('Failed to save note:', error)
@@ -59,6 +66,10 @@ export default function App() {
     try {
       setLoading(true)
       const note = await window.notesApi.getNote(noteId)
+      if (!note) {
+        console.error(`Note with id ${noteId} not found`)
+        return
+      }
       setSelectedNote(note)
       setTitle(note.title)
       setContent(note.content)
@@ -69,27 +80,105 @@ export default function App() {
     }
   }
 
-  // 切换主题函数
+  const handleMenu = (e: React.MouseEvent, note: Note) => {
+    e.preventDefault()
+    setRightClickMenu({
+      visible: true,
+      x: e.clientX,
+      y: e.clientY,
+      note: note,
+    })
+  }
+
+  const closeRightClickMenu = () => {
+    setRightClickMenu({ visible: false, x: 0, y: 0, note: null })
+  }
+
+  const handleEditNote = () => {
+    if (rightClickMenu.note) {
+      handleSelectNote(rightClickMenu.note.id)
+    }
+  }
+
+  const handleDeleteNote = async () => {
+    if (rightClickMenu.note) {
+      try {
+        await window.notesApi.deleteNote(rightClickMenu.note.id)
+        await fetchNotes()
+      } catch (error) {
+        console.error('Failed to delete note:', error)
+      }
+    }
+  }
+
   const toggleTheme = () => {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'))
   }
 
-  // 根据主题设置容器类名
+  // 当进入专注模式时，通知主进程改变窗口大小；退出时恢复原尺寸
+  const enterFocusMode = async () => {
+    setFocusMode(true)
+    // await window.notesApi.setWindowSize(500, 250)
+  }
+
+  const exitFocusMode = async () => {
+    setFocusMode(false)
+    // await window.notesApi.setWindowSize(900, 670)
+  }
+
+  const handleExitFocusMode = async() =>{
+    await handleSaveNote()
+    await exitFocusMode()
+  }
+
   const containerClass =
     theme === 'light'
       ? 'flex h-screen bg-gray-100 text-gray-900'
       : 'flex h-screen bg-gray-900 text-gray-100'
 
-  // 根据主题调整输入框等组件的背景色（可以根据需要进一步优化）
   const inputClass =
     theme === 'light'
       ? 'bg-gray-200 border border-gray-300'
       : 'bg-gray-800 border border-gray-700'
 
+  // 如果处于专注模式，则(专注模式视图)
+  if (focusMode) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div
+          className="relative shadow-lg rounded-md"
+          style={{
+            width: '100vw',
+            height: '100vh',
+            backgroundColor: theme === 'light' ? '#fff' : '#333',
+            color: theme === 'light' ? '#000' : '#fff',
+          }}
+        >
+          <textarea
+            className="w-full h-full p-2 resize-none"
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+          />
+          <div className="p-2 overflow-auto h-full w-full">
+            {selectedNote ? selectedNote.content : '没有选中的笔记'}
+          </div>
+          <button
+            className="absolute top-2 right-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded px-2 py-1"
+            onClick={handleExitFocusMode}
+          >
+            返回
+          </button>
+        </div>
+      </div>
+    )
+  }
+  
+  
+
   return (
     <div className={containerClass}>
       {/* 左侧笔记列表 */}
-      <div className="w-64 border-r border-gray-700 p-4 flex flex-col">
+      <div className="w-64 border-r border-gray-700 p-4 flex flex-col relative">
         <button
           onClick={handleNewNote}
           className="bg-blue-500 hover:bg-blue-600 text-white rounded-lg py-2 px-4 mb-4"
@@ -98,7 +187,6 @@ export default function App() {
           New Note
         </button>
 
-        {/* 主题切换按钮 */}
         <button
           onClick={toggleTheme}
           className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg py-2 px-4 mb-4"
@@ -112,8 +200,9 @@ export default function App() {
             <div
               key={note.id}
               onClick={() => handleSelectNote(note.id)}
+              onContextMenu={(e) => handleMenu(e, note)}
               className={`p-3 mb-2 rounded-lg cursor-pointer ${
-                selectedNote?.id === note.id ? 'bg-gray-700' : 'hover:bg-gray-800'
+                selectedNote?.id === note.id ? 'bg-gray-300' : 'hover:bg-gray-600'
               }`}
             >
               <h3 className="font-medium truncate">{note.title}</h3>
@@ -124,6 +213,14 @@ export default function App() {
             </div>
           ))}
         </div>
+
+        {/* 放在左下角的专注模式按钮 */}
+        <button
+          className="absolute bottom-4 left-4 bg-purple-500 hover:bg-purple-600 text-white rounded-lg py-1 px-3"
+          onClick={enterFocusMode}
+        >
+          专注模式
+        </button>
       </div>
 
       {/* 右侧编辑区 */}
@@ -153,6 +250,16 @@ export default function App() {
           {loading ? 'Saving...' : 'Save'}
         </button>
       </div>
+
+      {rightClickMenu.visible && (
+        <RightClickMenu
+          x={rightClickMenu.x}
+          y={rightClickMenu.y}
+          onClose={closeRightClickMenu}
+          onEdit={handleEditNote}
+          onDelete={handleDeleteNote}
+        />
+      )}
     </div>
   )
 }

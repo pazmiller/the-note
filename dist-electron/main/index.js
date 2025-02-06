@@ -109,6 +109,11 @@ function createWindow() {
     mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
 }
+ipcMain.handle("set-window-size", async (_, width, height) => {
+  if (mainWindow) {
+    mainWindow.setSize(width, height);
+  }
+});
 app.whenReady().then(() => {
   database.init();
   setupIpcHandlers();
