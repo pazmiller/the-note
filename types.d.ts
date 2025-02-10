@@ -17,7 +17,7 @@ export interface NotesAPI {
 declare global {
   interface Window {
     notesApi: NotesAPI;
-    authUser?: FirebaseUser; 
+    authUser?: FirebaseUser | null; 
   }
 
   export interface FirebaseUser {

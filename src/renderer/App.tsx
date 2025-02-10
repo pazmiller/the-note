@@ -2,10 +2,10 @@
 import { useState, useEffect } from 'react';
 import Login from './login';
 import RightClickMenu from './components/RightClickMenu';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
-// 为了使登录状态能触发组件重渲染，我们用 state 来管理 authUser
 export default function App() {
-  // 使用 state 管理用户登录状态，初始时取 window.authUser（如果之前登录过）或 null
+  // 管理登录状态，初始时取 window.authUser（如果有）或 null
   const [authUser, setAuthUser] = useState<FirebaseUser | null>(window.authUser || null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -26,10 +26,31 @@ export default function App() {
     note: null,
   });
 
-  // 从 authUser 中获取当前用户的 uid，如果未登录则默认使用 'testUser'
+  // currentUid 从 authUser 中获取；若未登录则使用 'testUser'
   const currentUid = authUser?.uid || 'testUser';
 
-  // 获取当前用户的所有笔记
+  // 监听 Firebase Auth 状态，自动恢复登录状态
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setAuthUser(user);
+        window.authUser = user;
+      } else {
+        setAuthUser(null);
+        window.authUser = undefined;
+      }
+    });
+    return unsubscribe;
+  }, []);
+
+  // 每当登录状态变化时，拉取笔记（仅当用户登录时）
+  useEffect(() => {
+    if (authUser) {
+      fetchNotes();
+    }
+  }, [authUser]);
+
   const fetchNotes = async () => {
     try {
       setLoading(true);
@@ -41,13 +62,6 @@ export default function App() {
       setLoading(false);
     }
   };
-
-  // 当 authUser 改变后（登录后），拉取笔记
-  useEffect(() => {
-    if (authUser) {
-      fetchNotes();
-    }
-  }, [authUser]);
 
   const handleNewNote = () => {
     setSelectedNote(null);
@@ -125,7 +139,17 @@ export default function App() {
     setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
   };
 
-  // 专注模式的切换函数
+  const handleLogout = async () => {
+    try {
+      const auth = getAuth();
+      await signOut(auth);
+      window.authUser = undefined;
+      setAuthUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
   const enterFocusMode = async () => {
     setFocusMode(true);
   };
@@ -134,7 +158,6 @@ export default function App() {
     setFocusMode(false);
   };
 
-  // 退出专注模式时自动保存
   const handleExitFocusMode = async () => {
     await handleSaveNote();
     await exitFocusMode();
@@ -150,7 +173,6 @@ export default function App() {
       ? 'bg-gray-200 border border-gray-300'
       : 'bg-gray-800 border border-gray-700';
 
-  // 如果用户未登录，显示登录界面
   if (!authUser) {
     return (
       <Login onLogin={(user) => {
@@ -160,7 +182,6 @@ export default function App() {
     );
   }
 
-  // 如果处于专注模式，则显示专注模式视图（这里仅使用 textarea 编辑内容）
   if (focusMode) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -207,15 +228,20 @@ export default function App() {
         >
           {theme === 'light' ? '切换到黑夜模式' : '切换到白天模式'}
         </button>
+        <button
+          onClick={handleLogout}
+          className="bg-red-500 hover:bg-red-600 text-white rounded-lg py-2 px-4 mb-4"
+          disabled={loading}
+        >
+          Log Out
+        </button>
         <div className="overflow-y-auto flex-1">
           {notes.map(note => (
             <div
               key={note.id}
               onClick={() => handleSelectNote(note.id)}
               onContextMenu={(e) => handleMenu(e, note)}
-              className={`p-3 mb-2 rounded-lg cursor-pointer ${
-                selectedNote?.id === note.id ? 'bg-gray-300' : 'hover:bg-gray-600'
-              }`}
+              className={`p-3 mb-2 rounded-lg cursor-pointer ${selectedNote?.id === note.id ? 'bg-gray-300' : 'hover:bg-gray-600'}`}
             >
               <h3 className="font-medium truncate">{note.title}</h3>
               <p className="text-sm text-gray-400 truncate">{note.content}</p>

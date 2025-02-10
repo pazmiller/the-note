@@ -13341,11 +13341,33 @@ function signInWithEmailAndPassword(auth, email, password) {
     throw error;
   });
 }
+/**
+ * @license
+ * Copyright 2020 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+function setPersistence(auth, persistence) {
+  return getModularInstance(auth).setPersistence(persistence);
+}
 function onIdTokenChanged(auth, nextOrObserver, error, completed) {
   return getModularInstance(auth).onIdTokenChanged(nextOrObserver, error, completed);
 }
 function beforeAuthStateChanged(auth, callback, onAbort) {
   return getModularInstance(auth).beforeAuthStateChanged(callback, onAbort);
+}
+function signOut(auth) {
+  return getModularInstance(auth).signOut();
 }
 const STORAGE_AVAILABLE_KEY = "__sak";
 /**
@@ -15536,10 +15558,15 @@ function Login({ onLogin }) {
   const [email, setEmail] = reactExports.useState("");
   const [password, setPassword] = reactExports.useState("");
   const [error, setError] = reactExports.useState(null);
+  const [rememberMe, setRememberMe] = reactExports.useState(false);
   const auth = getAuth();
+  const applyPersistence = async () => {
+    await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+  };
   const handleLogin = async () => {
     setError(null);
     try {
+      await applyPersistence();
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       onLogin(userCredential.user);
     } catch (e) {
@@ -15550,6 +15577,7 @@ function Login({ onLogin }) {
   const handleRegister = async () => {
     setError(null);
     try {
+      await applyPersistence();
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       onLogin(userCredential.user);
     } catch (e) {
@@ -15557,32 +15585,60 @@ function Login({ onLogin }) {
       setError(e.message);
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { children: "Login 登录 / Register 注册" }),
-    error && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { color: "red" }, children: error }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-h-screen bg-gray-100 flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-white p-8 rounded-lg shadow-lg w-full max-w-md", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-bold mb-6 text-center", children: "Login 登录 / Register 注册" }),
+    error && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mb-4 text-red-500", children: error }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
       "input",
       {
         type: "email",
         placeholder: "Email",
         value: email,
-        onChange: (e) => setEmail(e.target.value)
+        onChange: (e) => setEmail(e.target.value),
+        className: "w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-6", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
       "input",
       {
         type: "password",
         placeholder: "Password",
         value: password,
-        onChange: (e) => setPassword(e.target.value)
+        onChange: (e) => setPassword(e.target.value),
+        className: "w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
       }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: handleLogin, children: "Login 登录" }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("button", { onClick: handleRegister, children: "Register 注册" })
+    ) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-6 flex items-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
+        {
+          type: "checkbox",
+          checked: rememberMe,
+          onChange: (e) => setRememberMe(e.target.checked),
+          className: "mr-2"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Remember me" })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          onClick: handleLogin,
+          className: "bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors",
+          children: "Login 登录"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          onClick: handleRegister,
+          className: "bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors",
+          children: "Register 注册"
+        }
+      )
     ] })
-  ] });
+  ] }) });
 }
 const RightClickMenu = ({ x: x2, y: y2, onClose, onEdit, onDelete }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -15712,6 +15768,16 @@ function App() {
   const toggleTheme = () => {
     setTheme((prev) => prev === "light" ? "dark" : "light");
   };
+  const handleLogout = async () => {
+    try {
+      const auth = getAuth();
+      await signOut(auth);
+      window.authUser = null;
+      setAuthUser(null);
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
   const enterFocusMode = async () => {
     setFocusMode(true);
   };
@@ -15780,6 +15846,15 @@ function App() {
           className: "bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg py-2 px-4 mb-4",
           disabled: loading,
           children: theme === "light" ? "切换到黑夜模式" : "切换到白天模式"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "button",
+        {
+          onClick: handleLogout,
+          className: "bg-red-300 hover:bg-red-600 text-white rounded-lg py-2 px-4 mb-4",
+          disabled: loading,
+          children: "Log Out"
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "overflow-y-auto flex-1", children: notes.map((note) => /* @__PURE__ */ jsxRuntimeExports.jsxs(

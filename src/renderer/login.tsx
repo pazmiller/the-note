@@ -1,9 +1,16 @@
 // src/renderer/login.tsx
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { initializeApp } from 'firebase/app';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence
+} from 'firebase/auth';
 
-// 导入你的 Firebase 配置（可以放在一个单独的文件里，比如 firebaseConfig.ts）
+// 如果没有集中初始化 Firebase，你可以在这里初始化
 const firebaseConfig = {
   apiKey: "AIzaSyAqpieXYPeE4E_s7pCJItHGVdIzg13FnCI",
   authDomain: "eseential-note.firebaseapp.com",
@@ -14,20 +21,25 @@ const firebaseConfig = {
   measurementId: "G-S6RL8JSYK2"
 };
 
-// 初始化 Firebase App（注意如果你在其他地方已经初始化过了，就不要重复调用）
 initializeApp(firebaseConfig);
 
 export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [rememberMe, setRememberMe] = useState(false);
 
-  // 现在调用 getAuth() 时会使用已初始化的默认 app
   const auth = getAuth();
+
+  // 设置持久化策略：如果勾选“记住我”使用 localPersistence，否则使用 sessionPersistence
+  const applyPersistence = async () => {
+    await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
+  };
 
   const handleLogin = async () => {
     setError(null);
     try {
+      await applyPersistence();
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       onLogin(userCredential.user);
     } catch (e: any) {
@@ -39,6 +51,7 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
   const handleRegister = async () => {
     setError(null);
     try {
+      await applyPersistence();  // 加上持久化策略
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       onLogin(userCredential.user);
     } catch (e: any) {
@@ -48,24 +61,53 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
   };
 
   return (
-    <div>
-      <h2>Login 登录 / Register 注册</h2>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-      />
-      <div>
-        <button onClick={handleLogin}>Login 登录</button>
-        <button onClick={handleRegister}>Register 注册</button>
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+        <h2 className="text-2xl font-bold mb-6 text-center">Login 登录 / Register 注册</h2>
+        {error && <p className="mb-4 text-red-500">{error}</p>}
+        <div className="mb-4">
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="mb-6">
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="mb-6 flex items-center">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={e => setRememberMe(e.target.checked)}
+              className="mr-2"
+            />
+            <span>Remember me</span>
+          </label>
+        </div>
+        <div className="flex justify-between">
+          <button 
+            onClick={handleLogin} 
+            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
+          >
+            Login 登录
+          </button>
+          <button 
+            onClick={handleRegister} 
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors"
+          >
+            Register 注册
+          </button>
+        </div>
       </div>
     </div>
   );
