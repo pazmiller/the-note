@@ -1,147 +1,166 @@
 // src/renderer/App.tsx
-import { useState, useEffect } from 'react'
-import RightClickMenu from './components/RightClickMenu'
+import { useState, useEffect } from 'react';
+import Login from './login';
+import RightClickMenu from './components/RightClickMenu';
 
+// 为了使登录状态能触发组件重渲染，我们用 state 来管理 authUser
 export default function App() {
-  const [notes, setNotes] = useState<Note[]>([])
-  const [selectedNote, setSelectedNote] = useState<Note | null>(null)
-  const [title, setTitle] = useState('')
-  const [content, setContent] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [theme, setTheme] = useState('light')
-  const [focusMode, setFocusMode] = useState(false)
+  // 使用 state 管理用户登录状态，初始时取 window.authUser（如果之前登录过）或 null
+  const [authUser, setAuthUser] = useState<FirebaseUser | null>(window.authUser || null);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [theme, setTheme] = useState('light');
+  const [focusMode, setFocusMode] = useState(false);
   const [rightClickMenu, setRightClickMenu] = useState<{
-    visible: boolean
-    x: number
-    y: number
-    note: Note | null
+    visible: boolean;
+    x: number;
+    y: number;
+    note: Note | null;
   }>({
     visible: false,
     x: 0,
     y: 0,
     note: null,
-  })
+  });
 
-  // 获取所有笔记
+  // 从 authUser 中获取当前用户的 uid，如果未登录则默认使用 'testUser'
+  const currentUid = authUser?.uid || 'testUser';
+
+  // 获取当前用户的所有笔记
   const fetchNotes = async () => {
     try {
-      setLoading(true)
-      const allNotes = await window.notesApi.getAllNotes()
-      setNotes(allNotes)
+      setLoading(true);
+      const allNotes = await window.notesApi.getAllNotes(currentUid);
+      setNotes(allNotes);
     } catch (error) {
-      console.error('Failed to fetch notes:', error)
+      console.error('Failed to fetch notes:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
+  // 当 authUser 改变后（登录后），拉取笔记
   useEffect(() => {
-    fetchNotes()
-  }, [])
+    if (authUser) {
+      fetchNotes();
+    }
+  }, [authUser]);
 
   const handleNewNote = () => {
-    setSelectedNote(null)
-    setTitle('')
-    setContent('')
-  }
+    setSelectedNote(null);
+    setTitle('');
+    setContent('');
+  };
 
   const handleSaveNote = async () => {
-    if (!title.trim()) return
+    if (!title.trim()) return;
     try {
-      setLoading(true)
+      setLoading(true);
       if (selectedNote) {
-        await window.notesApi.updateNote(selectedNote.id, title, content)
+        await window.notesApi.updateNote(selectedNote.id, title, content);
       } else {
-        await window.notesApi.createNote(title, content)
+        await window.notesApi.createNote(title, content, currentUid);
       }
-      await fetchNotes()
+      await fetchNotes();
     } catch (error) {
-      console.error('Failed to save note:', error)
+      console.error('Failed to save note:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleSelectNote = async (noteId: number) => {
+  const handleSelectNote = async (noteId: string) => {
     try {
-      setLoading(true)
-      const note = await window.notesApi.getNote(noteId)
+      setLoading(true);
+      const note = await window.notesApi.getNote(noteId);
       if (!note) {
-        console.error(`Note with id ${noteId} not found`)
-        return
+        console.error(`Note with id ${noteId} not found`);
+        return;
       }
-      setSelectedNote(note)
-      setTitle(note.title)
-      setContent(note.content)
+      setSelectedNote(note);
+      setTitle(note.title);
+      setContent(note.content);
     } catch (error) {
-      console.error('Failed to get note:', error)
+      console.error('Failed to get note:', error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleMenu = (e: React.MouseEvent, note: Note) => {
-    e.preventDefault()
+    e.preventDefault();
     setRightClickMenu({
       visible: true,
       x: e.clientX,
       y: e.clientY,
       note: note,
-    })
-  }
+    });
+  };
 
   const closeRightClickMenu = () => {
-    setRightClickMenu({ visible: false, x: 0, y: 0, note: null })
-  }
+    setRightClickMenu({ visible: false, x: 0, y: 0, note: null });
+  };
 
   const handleEditNote = () => {
     if (rightClickMenu.note) {
-      handleSelectNote(rightClickMenu.note.id)
+      handleSelectNote(rightClickMenu.note.id);
     }
-  }
+  };
 
   const handleDeleteNote = async () => {
     if (rightClickMenu.note) {
       try {
-        await window.notesApi.deleteNote(rightClickMenu.note.id)
-        await fetchNotes()
+        await window.notesApi.deleteNote(rightClickMenu.note.id);
+        await fetchNotes();
       } catch (error) {
-        console.error('Failed to delete note:', error)
+        console.error('Failed to delete note:', error);
       }
     }
-  }
+  };
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'))
-  }
+    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+  };
 
-  // 当进入专注模式时，通知主进程改变窗口大小；退出时恢复原尺寸
+  // 专注模式的切换函数
   const enterFocusMode = async () => {
-    setFocusMode(true)
-    // await window.notesApi.setWindowSize(500, 250)
-  }
+    setFocusMode(true);
+  };
 
   const exitFocusMode = async () => {
-    setFocusMode(false)
-    // await window.notesApi.setWindowSize(900, 670)
-  }
+    setFocusMode(false);
+  };
 
-  const handleExitFocusMode = async() =>{
-    await handleSaveNote()
-    await exitFocusMode()
-  }
+  // 退出专注模式时自动保存
+  const handleExitFocusMode = async () => {
+    await handleSaveNote();
+    await exitFocusMode();
+  };
 
   const containerClass =
     theme === 'light'
       ? 'flex h-screen bg-gray-100 text-gray-900'
-      : 'flex h-screen bg-gray-900 text-gray-100'
+      : 'flex h-screen bg-gray-900 text-gray-100';
 
   const inputClass =
     theme === 'light'
       ? 'bg-gray-200 border border-gray-300'
-      : 'bg-gray-800 border border-gray-700'
+      : 'bg-gray-800 border border-gray-700';
 
-  // 如果处于专注模式，则(专注模式视图)
+  // 如果用户未登录，显示登录界面
+  if (!authUser) {
+    return (
+      <Login onLogin={(user) => {
+        window.authUser = user;
+        setAuthUser(user);
+      }} />
+    );
+  }
+
+  // 如果处于专注模式，则显示专注模式视图（这里仅使用 textarea 编辑内容）
   if (focusMode) {
     return (
       <div className="fixed inset-0 flex items-center justify-center">
@@ -159,9 +178,6 @@ export default function App() {
             value={content}
             onChange={(e) => setContent(e.target.value)}
           />
-          <div className="p-2 overflow-auto h-full w-full">
-            {selectedNote ? selectedNote.content : '没有选中的笔记'}
-          </div>
           <button
             className="absolute top-2 right-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded px-2 py-1"
             onClick={handleExitFocusMode}
@@ -170,10 +186,8 @@ export default function App() {
           </button>
         </div>
       </div>
-    )
+    );
   }
-  
-  
 
   return (
     <div className={containerClass}>
@@ -186,7 +200,6 @@ export default function App() {
         >
           New Note
         </button>
-
         <button
           onClick={toggleTheme}
           className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg py-2 px-4 mb-4"
@@ -194,7 +207,6 @@ export default function App() {
         >
           {theme === 'light' ? '切换到黑夜模式' : '切换到白天模式'}
         </button>
-
         <div className="overflow-y-auto flex-1">
           {notes.map(note => (
             <div
@@ -207,14 +219,11 @@ export default function App() {
             >
               <h3 className="font-medium truncate">{note.title}</h3>
               <p className="text-sm text-gray-400 truncate">{note.content}</p>
-              <p className="text-xs text-gray-500 mt-1">
-                {new Date(note.updated_at).toLocaleDateString()}
-              </p>
+              <p className="text-xs text-gray-500 mt-1">{new Date(note.updated_at).toLocaleDateString()}</p>
             </div>
           ))}
         </div>
-
-        {/* 放在左下角的专注模式按钮 */}
+        {/* 左下角的专注模式按钮 */}
         <button
           className="absolute bottom-4 left-4 bg-purple-500 hover:bg-purple-600 text-white rounded-lg py-1 px-3"
           onClick={enterFocusMode}
@@ -222,7 +231,6 @@ export default function App() {
           专注模式
         </button>
       </div>
-
       {/* 右侧编辑区 */}
       <div className="flex-1 p-6 flex flex-col">
         <input
@@ -233,7 +241,6 @@ export default function App() {
           className={`${inputClass} rounded-lg p-3 mb-4 w-full`}
           disabled={loading}
         />
-
         <textarea
           value={content}
           onChange={e => setContent(e.target.value)}
@@ -241,7 +248,6 @@ export default function App() {
           className={`${inputClass} rounded-lg p-3 mb-4 flex-1 w-full resize-none`}
           disabled={loading}
         />
-
         <button
           onClick={handleSaveNote}
           className="bg-green-600 hover:bg-green-700 text-white rounded-lg py-2 px-4 disabled:opacity-50"
@@ -250,7 +256,6 @@ export default function App() {
           {loading ? 'Saving...' : 'Save'}
         </button>
       </div>
-
       {rightClickMenu.visible && (
         <RightClickMenu
           x={rightClickMenu.x}
@@ -261,5 +266,5 @@ export default function App() {
         />
       )}
     </div>
-  )
+  );
 }

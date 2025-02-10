@@ -1,7 +1,6 @@
 // src/main/index.ts
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
-import { database } from './database'
 import { setupIpcHandlers } from './ipc'
 
 let mainWindow: BrowserWindow | null = null
@@ -32,7 +31,6 @@ ipcMain.handle('set-window-size', async (_, width: number, height: number) => {
 })
 // 只调用一次 app.whenReady()
 app.whenReady().then(() => {
-  database.init()
   setupIpcHandlers()
   createWindow()
 

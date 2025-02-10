@@ -1,29 +1,25 @@
-console.log('Preload loadedddddd');
 import { contextBridge, ipcRenderer } from 'electron'
 
 export type NotesAPI = {
-  createNote: (title: string, content: string) => Promise<any>
-  getAllNotes: () => Promise<Note[]>
-  getNote: (id: number) => Promise<Note>
-  updateNote: (id: number, title: string, content: string) => Promise<any>
-  deleteNote: (id: number) => Promise<any>
-  // 新增方法：设置窗口大小
+  createNote: (title: string, content: string, uid?: string) => Promise<any>
+  getAllNotes: (uid?: string) => Promise<Note[]>
+  getNote: (noteId: string) => Promise<Note | null>
+  updateNote: (noteId: string, title: string, content: string) => Promise<any>
+  deleteNote: (noteId: string) => Promise<any>
   setWindowSize: (width: number, height: number) => Promise<void>
 }
 
 const api: NotesAPI = {
-  createNote: (title, content) => ipcRenderer.invoke('create-note', title, content),
-  getAllNotes: () => ipcRenderer.invoke('get-all-notes'),
-  getNote: (id) => ipcRenderer.invoke('get-note', id),
-  updateNote: (id, title, content) => ipcRenderer.invoke('update-note', id, title, content),
-  deleteNote: (id) => ipcRenderer.invoke('delete-note', id),
-  // 通过 IPC 调用主进程中注册的 "set-window-size" 事件
+  createNote: (title, content, uid) => ipcRenderer.invoke('create-note', title, content, uid),
+  getAllNotes: (uid) => ipcRenderer.invoke('get-all-notes', uid),
+  getNote: (noteId) => ipcRenderer.invoke('get-note', noteId),
+  updateNote: (noteId, title, content) => ipcRenderer.invoke('update-note', noteId, title, content),
+  deleteNote: (noteId) => ipcRenderer.invoke('delete-note', noteId),
   setWindowSize: (width, height) => ipcRenderer.invoke('set-window-size', width, height)
 }
 
 contextBridge.exposeInMainWorld('notesApi', api)
 
-// TypeScript 声明
 declare global {
   interface Window {
     notesApi: NotesAPI

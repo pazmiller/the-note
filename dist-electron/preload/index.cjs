@@ -1,13 +1,11 @@
 "use strict";
 const electron = require("electron");
-console.log("Preload loadedddddd");
 const api = {
-  createNote: (title, content) => electron.ipcRenderer.invoke("create-note", title, content),
-  getAllNotes: () => electron.ipcRenderer.invoke("get-all-notes"),
-  getNote: (id) => electron.ipcRenderer.invoke("get-note", id),
-  updateNote: (id, title, content) => electron.ipcRenderer.invoke("update-note", id, title, content),
-  deleteNote: (id) => electron.ipcRenderer.invoke("delete-note", id),
-  // 通过 IPC 调用主进程中注册的 "set-window-size" 事件
+  createNote: (title, content, uid) => electron.ipcRenderer.invoke("create-note", title, content, uid),
+  getAllNotes: (uid) => electron.ipcRenderer.invoke("get-all-notes", uid),
+  getNote: (noteId) => electron.ipcRenderer.invoke("get-note", noteId),
+  updateNote: (noteId, title, content) => electron.ipcRenderer.invoke("update-note", noteId, title, content),
+  deleteNote: (noteId) => electron.ipcRenderer.invoke("delete-note", noteId),
   setWindowSize: (width, height) => electron.ipcRenderer.invoke("set-window-size", width, height)
 };
 electron.contextBridge.exposeInMainWorld("notesApi", api);
