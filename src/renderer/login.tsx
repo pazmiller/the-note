@@ -1,6 +1,6 @@
 // src/renderer/login.tsx
-import React, { useState } from 'react';
-import { initializeApp } from 'firebase/app';
+import { useState } from 'react';
+
 import { 
   getAuth, 
   signInWithEmailAndPassword, 
@@ -10,20 +10,7 @@ import {
   browserSessionPersistence
 } from 'firebase/auth';
 import myImage from '../assets/siam.jpg';
-
-// Firebase 配置
-const firebaseConfig = {
-  apiKey: "AIzaSyAqpieXYPeE4E_s7pCJItHGVdIzg13FnCI",
-  authDomain: "eseential-note.firebaseapp.com",
-  projectId: "eseential-note",
-  storageBucket: "eseential-note.firebasestorage.app",
-  messagingSenderId: "689345182013",
-  appId: "1:689345182013:web:e6abde488644bf5f1dad54",
-  measurementId: "G-S6RL8JSYK2"
-};
-
-// 初始化 Firebase App
-initializeApp(firebaseConfig);
+import { firebaseAppConfig } from '../firebaseConfig';
 
 export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
   const [email, setEmail] = useState('');
@@ -31,7 +18,7 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const auth = getAuth();
+  const auth = getAuth(firebaseAppConfig);
 
   const applyPersistence = async () => {
     await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
@@ -63,7 +50,7 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
 
   return (
     <div className="min-h-screen bg-gray-100 flex">
-      {/* 左侧：图片，始终占50%宽度和全屏高度 */}
+      {/* 左侧：图片，50% */}
       <div className="w-1/2 h-screen hidden lg:block">
         <img 
           src={myImage} 
@@ -71,7 +58,7 @@ export default function Login({ onLogin }: { onLogin: (user: any) => void }) {
           className="object-cover w-full h-full"
         />
       </div>
-      {/* 右侧：登录表单，同样占50%宽度和全屏高度 */}
+      {/* 右侧：登录表单，50% */}
       <div className="flex flex-col justify-center items-center w-full lg:w-1/2">
        <div className="w-full max-w-md p-8">
           <h2 className="text-2xl font-bold mb-6 text-center">Login 登录 / Register 注册</h2>
