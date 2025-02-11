@@ -5,7 +5,6 @@ import RightClickMenu from './components/RightClickMenu';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
 export default function App() {
-  // 管理登录状态，初始时取 window.authUser（如果有）或 null
   const [authUser, setAuthUser] = useState<FirebaseUser | null>(window.authUser || null);
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNote, setSelectedNote] = useState<Note | null>(null);
@@ -26,7 +25,7 @@ export default function App() {
     note: null,
   });
 
-  // currentUid 从 authUser 中获取；若未登录则使用 'testUser'
+  // 根据currentUid返回对应用户；若未登录则使用 'testUser'
   const currentUid = authUser?.uid || 'testUser';
 
   // 监听 Firebase Auth 状态，自动恢复登录状态
@@ -44,7 +43,7 @@ export default function App() {
     return unsubscribe;
   }, []);
 
-  // 每当登录状态变化时，拉取笔记（仅当用户登录时）
+  // If 确认User登录信息成功, then fetchNotes
   useEffect(() => {
     if (authUser) {
       fetchNotes();
@@ -226,7 +225,7 @@ export default function App() {
           className="bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg py-2 px-4 mb-4"
           disabled={loading}
         >
-          {theme === 'light' ? '切换到黑夜模式' : '切换到白天模式'}
+          {theme === 'light' ? 'Lights Off' : 'Lights On'}
         </button>
         <button
           onClick={handleLogout}
@@ -249,15 +248,15 @@ export default function App() {
             </div>
           ))}
         </div>
-        {/* 左下角的专注模式按钮 */}
+        {/* Button for Focus Mode */}
         <button
           className="absolute bottom-4 left-4 bg-purple-500 hover:bg-purple-600 text-white rounded-lg py-1 px-3"
           onClick={enterFocusMode}
         >
-          专注模式
+          Focus Zone
         </button>
       </div>
-      {/* 右侧编辑区 */}
+      {/* 右侧Main Section */}
       <div className="flex-1 p-6 flex flex-col">
         <input
           type="text"

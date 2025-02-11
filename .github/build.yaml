@@ -1,0 +1,75 @@
+name: Build Electron App
+
+on:
+  push:
+    branches:
+      - trunk
+  pull_request:
+    branches:
+      - trunk
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest  # Windows
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build App
+        run: npm run build
+
+      - name: Build Electron App for Windows
+        run: npm run dist
+
+      - name: Upload Windows Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: note-windows-app
+          path: dist-electron/*.exe  
+
+      - name: Publish to GitHub Releases # Auto Github Release
+        run: |
+          npm run dist -- -p always
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-macos:
+    runs-on: macos-latest  # macOS
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build App
+        run: npm run build
+
+      - name: Build Electron App for macOS
+        run: npm run dist
+
+      - name: Upload macOS Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: macOS-app
+          path: dist-electron/mac/*.dmg 
+
+      - name: Publish to GitHub Releases
+        run: |
+          npm run dist -- -p always
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

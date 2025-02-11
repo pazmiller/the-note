@@ -13366,6 +13366,9 @@ function onIdTokenChanged(auth, nextOrObserver, error, completed) {
 function beforeAuthStateChanged(auth, callback, onAbort) {
   return getModularInstance(auth).beforeAuthStateChanged(callback, onAbort);
 }
+function onAuthStateChanged(auth, nextOrObserver, error, completed) {
+  return getModularInstance(auth).onAuthStateChanged(nextOrObserver, error, completed);
+}
 function signOut(auth) {
   return getModularInstance(auth).signOut();
 }
@@ -15544,6 +15547,7 @@ registerAuth(
   "Browser"
   /* ClientPlatform.BROWSER */
 );
+const myImage = "" + new URL("siam-Gj4WtnEN.jpg", import.meta.url).href;
 const firebaseConfig = {
   apiKey: "AIzaSyAqpieXYPeE4E_s7pCJItHGVdIzg13FnCI",
   authDomain: "eseential-note.firebaseapp.com",
@@ -15557,8 +15561,8 @@ initializeApp(firebaseConfig);
 function Login({ onLogin }) {
   const [email, setEmail] = reactExports.useState("");
   const [password, setPassword] = reactExports.useState("");
-  const [error, setError] = reactExports.useState(null);
   const [rememberMe, setRememberMe] = reactExports.useState(false);
+  const [error, setError] = reactExports.useState(null);
   const auth = getAuth();
   const applyPersistence = async () => {
     await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
@@ -15585,60 +15589,70 @@ function Login({ onLogin }) {
       setError(e.message);
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "min-h-screen bg-gray-100 flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-white p-8 rounded-lg shadow-lg w-full max-w-md", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-bold mb-6 text-center", children: "Login 登录 / Register 注册" }),
-    error && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mb-4 text-red-500", children: error }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "input",
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "min-h-screen bg-gray-100 flex", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-1/2 h-screen hidden lg:block", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "img",
       {
-        type: "email",
-        placeholder: "Email",
-        value: email,
-        onChange: (e) => setEmail(e.target.value),
-        className: "w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        src: myImage,
+        alt: "Local Image",
+        className: "object-cover w-full h-full"
       }
     ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-6", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "input",
-      {
-        type: "password",
-        placeholder: "Password",
-        value: password,
-        onChange: (e) => setPassword(e.target.value),
-        className: "w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-      }
-    ) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-6 flex items-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-col justify-center items-center w-full lg:w-1/2", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-md p-8", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-2xl font-bold mb-6 text-center", children: "Login 登录 / Register 注册" }),
+      error && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mb-4 text-red-500", children: error }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         "input",
         {
-          type: "checkbox",
-          checked: rememberMe,
-          onChange: (e) => setRememberMe(e.target.checked),
-          className: "mr-2"
+          type: "email",
+          placeholder: "Email",
+          value: email,
+          onChange: (e) => setEmail(e.target.value),
+          className: "w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Remember me" })
-    ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "button",
+      ) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-6", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "input",
         {
-          onClick: handleLogin,
-          className: "bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors",
-          children: "Login 登录"
+          type: "password",
+          placeholder: "Password",
+          value: password,
+          onChange: (e) => setPassword(e.target.value),
+          className: "w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         }
-      ),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        "button",
-        {
-          onClick: handleRegister,
-          className: "bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors",
-          children: "Register 注册"
-        }
-      )
-    ] })
-  ] }) });
+      ) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mb-6 flex items-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("label", { className: "flex items-center", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            type: "checkbox",
+            checked: rememberMe,
+            onChange: (e) => setRememberMe(e.target.checked),
+            className: "mr-2"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Remember me" })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            onClick: handleLogin,
+            className: "bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors",
+            children: "Login 登录"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            onClick: handleRegister,
+            className: "bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition-colors",
+            children: "Register 注册"
+          }
+        )
+      ] })
+    ] }) })
+  ] });
 }
 const RightClickMenu = ({ x: x2, y: y2, onClose, onEdit, onDelete }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -15684,6 +15698,24 @@ function App() {
     note: null
   });
   const currentUid = authUser?.uid || "testUser";
+  reactExports.useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setAuthUser(user);
+        window.authUser = user;
+      } else {
+        setAuthUser(null);
+        window.authUser = void 0;
+      }
+    });
+    return unsubscribe;
+  }, []);
+  reactExports.useEffect(() => {
+    if (authUser) {
+      fetchNotes();
+    }
+  }, [authUser]);
   const fetchNotes = async () => {
     try {
       setLoading(true);
@@ -15695,11 +15727,6 @@ function App() {
       setLoading(false);
     }
   };
-  reactExports.useEffect(() => {
-    if (authUser) {
-      fetchNotes();
-    }
-  }, [authUser]);
   const handleNewNote = () => {
     setSelectedNote(null);
     setTitle("");
@@ -15772,7 +15799,7 @@ function App() {
     try {
       const auth = getAuth();
       await signOut(auth);
-      window.authUser = null;
+      window.authUser = void 0;
       setAuthUser(null);
     } catch (error) {
       console.error("Logout error:", error);
@@ -15852,7 +15879,7 @@ function App() {
         "button",
         {
           onClick: handleLogout,
-          className: "bg-red-300 hover:bg-red-600 text-white rounded-lg py-2 px-4 mb-4",
+          className: "bg-red-500 hover:bg-red-600 text-white rounded-lg py-2 px-4 mb-4",
           disabled: loading,
           children: "Log Out"
         }
