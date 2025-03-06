@@ -4,7 +4,7 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:  # 添加此行允许手动触发
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   build:
@@ -12,12 +12,8 @@ jobs:
     
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [windows-latest, macos-latest]
         include:
-          - os: ubuntu-latest
-            build_command: pack:linux
-            artifact_path: release/
-            artifact_name: essential-notes-linux
           - os: windows-latest
             build_command: pack:win
             artifact_path: release/
@@ -49,8 +45,9 @@ jobs:
         
       - name: List directory after build
         run: |
-          pwd
+          echo "Current directory content:"
           ls -la || dir
+          echo "Release directory content (if exists):"
           ls -la release/ || dir release/ || echo "Release directory not found"
           
       - name: Upload build artifacts
@@ -80,7 +77,6 @@ jobs:
           files: |
             essential-notes-windows/**/*
             essential-notes-mac/**/*
-            essential-notes-linux/**/*
           generate_release_notes: true
           draft: false
           prerelease: false
