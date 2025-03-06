@@ -15,6 +15,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: trunk
           fetch-depth: 0  # 获取完整历史记录，用于版本生成
           token: ${{ secrets.GH_TOKEN }}  # 使用你的 PAT 而不是默认令牌
           
