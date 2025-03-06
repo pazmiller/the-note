@@ -1,1 +1,42 @@
 @import "tailwindcss";
+
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 20px;
+}
+
+
+.note-item {
+    transition: all 0.2s ease;
+}
+
+.note-item:hover {
+    transform: translateY(-2px);
+}
+
+
+.input-focus-effect:focus {
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+.btn-press {
+    transition: all 0.1s ease;
+}
+
+.btn-press:active {
+    transform: scale(0.97);
+}
+
+* {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+    transition-duration: 300ms;
+    transition-timing-function: ease-in-out;
+}

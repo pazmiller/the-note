@@ -9157,25 +9157,6 @@ function registerCoreComponents(variant) {
   registerVersion("fire-js", "");
 }
 registerCoreComponents("");
-var name$1 = "firebase";
-var version$1 = "11.3.0";
-/**
- * @license
- * Copyright 2020 Google LLC
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-registerVersion(name$1, version$1, "app");
 function __rest(s, e) {
   var t2 = {};
   for (var p2 in s) if (Object.prototype.hasOwnProperty.call(s, p2) && e.indexOf(p2) < 0)
@@ -15294,8 +15275,8 @@ class BrowserPopupRedirectResolver {
   }
 }
 const browserPopupRedirectResolver = BrowserPopupRedirectResolver;
-var name = "@firebase/auth";
-var version = "1.9.0";
+var name$1 = "@firebase/auth";
+var version$1 = "1.9.0";
 /**
  * @license
  * Copyright 2020 Google LLC
@@ -15448,8 +15429,8 @@ function registerAuth(clientPlatform) {
     "EXPLICIT"
     /* InstantiationMode.EXPLICIT */
   ));
-  registerVersion(name, version, getVersionForPlatform(clientPlatform));
-  registerVersion(name, version, "esm2017");
+  registerVersion(name$1, version$1, getVersionForPlatform(clientPlatform));
+  registerVersion(name$1, version$1, "esm2017");
 }
 /**
  * @license
@@ -15548,6 +15529,25 @@ registerAuth(
   /* ClientPlatform.BROWSER */
 );
 const myImage = "" + new URL("siam-Gj4WtnEN.jpg", import.meta.url).href;
+var name = "firebase";
+var version = "11.3.0";
+/**
+ * @license
+ * Copyright 2020 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+registerVersion(name, version, "app");
 const firebaseConfig = {
   apiKey: "AIzaSyAqpieXYPeE4E_s7pCJItHGVdIzg13FnCI",
   authDomain: "eseential-note.firebaseapp.com",
@@ -15557,13 +15557,13 @@ const firebaseConfig = {
   appId: "1:689345182013:web:e6abde488644bf5f1dad54",
   measurementId: "G-S6RL8JSYK2"
 };
-initializeApp(firebaseConfig);
+const firebaseAppConfig = initializeApp(firebaseConfig);
 function Login({ onLogin }) {
   const [email, setEmail] = reactExports.useState("");
   const [password, setPassword] = reactExports.useState("");
   const [rememberMe, setRememberMe] = reactExports.useState(false);
   const [error, setError] = reactExports.useState(null);
-  const auth = getAuth();
+  const auth = getAuth(firebaseAppConfig);
   const applyPersistence = async () => {
     await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence);
   };
@@ -15872,7 +15872,7 @@ function App() {
           onClick: toggleTheme,
           className: "bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg py-2 px-4 mb-4",
           disabled: loading,
-          children: theme === "light" ? "切换到黑夜模式" : "切换到白天模式"
+          children: theme === "light" ? "Lights Off" : "Lights On"
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -15903,7 +15903,7 @@ function App() {
         {
           className: "absolute bottom-4 left-4 bg-purple-500 hover:bg-purple-600 text-white rounded-lg py-1 px-3",
           onClick: enterFocusMode,
-          children: "专注模式"
+          children: "Focus Zone"
         }
       )
     ] }),
