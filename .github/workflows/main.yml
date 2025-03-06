@@ -36,7 +36,19 @@ jobs:
           node-version: 18
           cache: 'npm'
           
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+            path: |
+              ~/.npm
+              node_modules
+            key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+            restore-keys: |
+              ${{ runner.os }}-node-
+        
       - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
       
       # 如果better-sqlite3需要重建
