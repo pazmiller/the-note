@@ -1,0 +1,82 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*' # Only activates when the tag starts with v
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            build_command: pack:linux
+            artifact_path: release/**/*.AppImage release/**/*.deb release/**/*.rpm
+            artifact_name: essential-notes-linux
+          - os: windows-latest
+            build_command: pack:win
+            artifact_path: release/**/*.exe
+            artifact_name: essential-notes-windows
+          - os: macos-latest
+            build_command: pack:mac
+            artifact_path: release/**/*.dmg release/**/*.zip
+            artifact_name: essential-notes-mac
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+      
+      # 如果better-sqlite3需要重建
+      - name: Rebuild native dependencies
+        run: npm run rebuild
+        
+      - name: Build for ${{ matrix.os }}
+        run: npm run ${{ matrix.build_command }}
+        
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_path }}
+          if-no-files-found: warn
+  
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        
+      - name: Display structure of downloaded files
+        run: ls -R
+        
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            essential-notes-windows/**/*.exe
+            essential-notes-mac/**/*.dmg
+            essential-notes-mac/**/*.zip
+            essential-notes-linux/**/*.AppImage
+            essential-notes-linux/**/*.deb
+            essential-notes-linux/**/*.rpm
+          generate_release_notes: true
+          draft: false
+          prerelease: false
