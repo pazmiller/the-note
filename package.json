@@ -1,7 +1,7 @@
 {
   "name": "essential-notes-electron",
   "private": true,
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A simple and clearn note taking application",
   "author": "LP-Cat",
   "main": "dist-electron/main/index.js",
