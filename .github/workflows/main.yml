@@ -1,61 +1,24 @@
-name: Build and Release for Windows
+name: Build and Release
 
 on:
+  workflow_dispatch:  # 允许手动触发
   push:
     tags:
       - 'v*'
-  workflow_dispatch:  # 允许手动触发
 
 jobs:
-  version:
+  build:
     runs-on: windows-latest
     outputs:
-      new_version: ${{ steps.get_version.outputs.VERSION }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: trunk
-          fetch-depth: 0  # 获取完整历史记录，用于版本生成
-          token: ${{ secrets.GH_TOKEN }}  # 使用你的 PAT 而不是默认令牌
-          
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'npm'
-          
-      - name: Install dependencies
-        run: npm ci
-      
-      - name: Set Git User
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-        
-      - name: Bump version
-        run: npm run release:patch
-        
-      - name: Get version
-        id: get_version
-        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $env:GITHUB_OUTPUT
-        
-      - name: Push changes with PAT
-        run: |
-          git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git
-          git push
-          git push --tags
-
-  build:
-    needs: version
-    runs-on: windows-latest
+      version: ${{ steps.set_version.outputs.VERSION }}
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref_name }}  # 确保检出到正确的分支
-          token: ${{ secrets.GH_TOKEN }}  # 同样使用 PAT
+          ref: trunk  # 显式指定分支
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
           
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -66,10 +29,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
       
+      # 生成唯一版本号
+      - name: Set version
+        id: set_version
+        run: |
+          $NEW_VERSION = "1.0.${{ github.run_number }}"
+          echo "VERSION=$NEW_VERSION" >> $env:GITHUB_OUTPUT
+          
+          # 更新package.json中的版本号
+          $packageJson = Get-Content -Path package.json -Raw | ConvertFrom-Json
+          $packageJson.version = $NEW_VERSION
+          $packageJson | ConvertTo-Json -Depth 100 | Set-Content -Path package.json
+          
+          # 显示更新后的版本
+          echo "Updated version to $NEW_VERSION"
+      
+      # 不要尝试提交和推送更改，只使用更新后的package.json构建
+      
+      # 构建应用
       - name: Build for Windows
-        run: npm run pack:win
+        run: npm run build && npx electron-builder --win --x64 --publish never
         env:
-          VERSION: ${{ needs.version.outputs.new_version }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         
       - name: List directory after build
         run: |
@@ -82,32 +63,34 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: essential-notes-windows
-          path: release/
+          path: release/**/*.exe
           if-no-files-found: warn
   
   release:
-    needs: [version, build]
+    needs: build
     runs-on: windows-latest
     permissions:
-      contents: write  # 确保有创建发布的权限
+      contents: write
     
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
+        with:
+          name: essential-notes-windows
+          path: release-files
         
       - name: Display structure of downloaded files
-        run: dir /s
+        run: dir release-files /s
         
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}  # 使用 PAT 创建发布
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
-          tag_name: v${{ needs.version.outputs.new_version }}
-          name: Release v${{ needs.version.outputs.new_version }}
-          files: |
-            essential-notes-windows/**/*
+          tag_name: v${{ needs.build.outputs.version }}
+          name: Release v${{ needs.build.outputs.version }}
+          files: release-files/**/*
           generate_release_notes: true
           draft: false
           prerelease: false
