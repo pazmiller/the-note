@@ -3,7 +3,8 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*' # Only activates when the tag starts with v
+      - 'v*'
+  workflow_dispatch:  # 添加此行允许手动触发
 
 jobs:
   build:
@@ -15,15 +16,15 @@ jobs:
         include:
           - os: ubuntu-latest
             build_command: pack:linux
-            artifact_path: release/**/*.AppImage release/**/*.deb release/**/*.rpm
+            artifact_path: release/
             artifact_name: essential-notes-linux
           - os: windows-latest
             build_command: pack:win
-            artifact_path: release/**/*.exe
+            artifact_path: release/
             artifact_name: essential-notes-windows
           - os: macos-latest
             build_command: pack:mac
-            artifact_path: release/**/*.dmg release/**/*.zip
+            artifact_path: release/
             artifact_name: essential-notes-mac
     
     steps:
@@ -34,30 +35,24 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
           
-      - name: Cache npm dependencies
-        uses: actions/cache@v4
-        id: npm-cache
-        with:
-            path: |
-              ~/.npm
-              node_modules
-            key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-            restore-keys: |
-              ${{ runner.os }}-node-
-        
       - name: Install dependencies
-        if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
       
-      # 如果better-sqlite3需要重建
-      - name: Rebuild native dependencies
-        run: npm run rebuild
-        
+      - name: List directory before build
+        run: |
+          pwd
+          ls -la || dir
+      
       - name: Build for ${{ matrix.os }}
         run: npm run ${{ matrix.build_command }}
         
+      - name: List directory after build
+        run: |
+          pwd
+          ls -la || dir
+          ls -la release/ || dir release/ || echo "Release directory not found"
+          
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -83,12 +78,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: |
-            essential-notes-windows/**/*.exe
-            essential-notes-mac/**/*.dmg
-            essential-notes-mac/**/*.zip
-            essential-notes-linux/**/*.AppImage
-            essential-notes-linux/**/*.deb
-            essential-notes-linux/**/*.rpm
+            essential-notes-windows/**/*
+            essential-notes-mac/**/*
+            essential-notes-linux/**/*
           generate_release_notes: true
           draft: false
           prerelease: false
