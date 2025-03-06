@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.26](https://github.com/pazmiller/the-note/compare/v1.0.25...v1.0.26) (2025-03-06)
+
 ### [1.0.25](https://github.com/pazmiller/the-note/compare/v1.0.24...v1.0.25) (2025-03-06)
 
 ### [1.0.24](https://github.com/pazmiller/the-note/compare/v1.0.23...v1.0.24) (2025-03-06)
