@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0  # 获取完整历史记录，用于版本生成
-          token: ${{ secrets.PAT }}  # 使用你的 PAT 而不是默认令牌
+          token: ${{ secrets.GH_TOKEN }}  # 使用你的 PAT 而不是默认令牌
           
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -41,7 +41,7 @@ jobs:
         
       - name: Push changes with PAT
         run: |
-          git remote set-url origin https://x-access-token:${{ secrets.PAT }}@github.com/${{ github.repository }}.git
+          git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git
           git push
           git push --tags
 
@@ -54,7 +54,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}  # 确保检出到正确的分支
-          token: ${{ secrets.PAT }}  # 同样使用 PAT
+          token: ${{ secrets.GH_TOKEN }}  # 同样使用 PAT
           
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -101,7 +101,7 @@ jobs:
         id: create_release
         uses: softprops/action-gh-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT }}  # 使用 PAT 创建发布
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}  # 使用 PAT 创建发布
         with:
           tag_name: v${{ needs.version.outputs.new_version }}
           name: Release v${{ needs.version.outputs.new_version }}
