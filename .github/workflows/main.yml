@@ -80,7 +80,7 @@ jobs:
           path: release-files
         
       - name: Display structure of downloaded files
-        run: dir release-files /s
+        run: Get-ChildItem -Path release-files -Recurse
         
       - name: Create Release
         id: create_release
