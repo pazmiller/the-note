@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
-
 import { NotesAPI } from '../../types';
+
 
 const api: NotesAPI = {
   createNote: ( title, content, uid ) => ipcRenderer.invoke( 'create-note', title, content, uid ),

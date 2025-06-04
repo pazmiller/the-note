@@ -8,7 +8,8 @@ import
   createUserWithEmailAndPassword,
   setPersistence,
   browserLocalPersistence,
-  browserSessionPersistence
+  browserSessionPersistence,
+  sendPasswordResetEmail
 } from 'firebase/auth';
 import myImage from '../assets/siam.jpg';
 import { firebaseAppConfig } from '../firebaseConfig';
@@ -16,9 +17,12 @@ import { firebaseAppConfig } from '../firebaseConfig';
 export default function Login( { onLogin }: { onLogin: ( user: any ) => void } )
 {
   const [ email, setEmail ] = useState( '' );
+  const [ resetEmail, setResetEmail ] = useState( '' );
+  const [ showResetForm, setShowResetForm ] = useState( false );
   const [ password, setPassword ] = useState( '' );
   const [ rememberMe, setRememberMe ] = useState( false );
   const [ error, setError ] = useState<string | null>( null );
+  const [ resetMessage, setResetMessage ] = useState<string | null>( null );
 
   const auth = getAuth( firebaseAppConfig );
 
@@ -26,6 +30,26 @@ export default function Login( { onLogin }: { onLogin: ( user: any ) => void } )
   {
     await setPersistence( auth, rememberMe ? browserLocalPersistence : browserSessionPersistence );
   };
+  const handlePasswordReset = async ( e: React.FormEvent ) =>
+  {
+    e.preventDefault();
+    if ( !resetEmail )
+    {
+      setError( 'Please enter your email address.' );
+      return;
+    }
+    try
+    {
+      await sendPasswordResetEmail( auth, resetEmail );
+      setResetMessage( 'Reset sent, please kindly check your email.' );
+      setShowResetForm( false );
+    }
+    catch ( e: any )
+    {
+      console.error( "Password reset error:", e );
+      setError( e.message );
+    }
+  }
 
   const handleLogin = async () =>
   {
@@ -73,6 +97,7 @@ export default function Login( { onLogin }: { onLogin: ( user: any ) => void } )
           <p className="text-gray-500 text-center mb-8">Welcome back! Please log in to continue</p>
 
           {error && <p className="mb-4 text-red-500 p-3 bg-red-50 rounded-md">{error}</p>}
+          {resetMessage && <p className="mb-4 text-green-500 p-3 bg-green-50 rounded-md">{resetMessage}</p>}
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -116,14 +141,51 @@ export default function Login( { onLogin }: { onLogin: ( user: any ) => void } )
               className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-3 rounded-lg font-medium shadow hover:shadow-lg transition-all"
             >
               Login 登录
-            </button>
-
-            <button
+            </button>            <button
               onClick={handleRegister}
               className="w-full bg-white text-indigo-600 border border-indigo-500 py-3 rounded-lg font-medium hover:bg-indigo-50 transition-all"
             >
               Register 注册
             </button>
+
+            {!showResetForm ? (
+              <button
+                type="button"
+                onClick={() => setShowResetForm( true )}
+                className='w-full bg-white text-indigo-600 border border-indigo-500 py-3 rounded-lg font-medium hover:bg-indigo-50 transition-all'
+              >
+                Forgot Password 忘记密码?
+              </button>
+            ) : (
+              // 密码重置表单
+              <form onSubmit={handlePasswordReset} className="space-y-6">
+                <div>
+                  <input
+                    type="email"
+                    placeholder="输入邮箱地址"
+                    value={resetEmail}
+                    onChange={( e ) => setResetEmail( e.target.value )}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-3 rounded-lg font-medium shadow hover:shadow-lg transition-all"
+                >
+                  发送重置邮件
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowResetForm( false )}
+                  className="w-full bg-white text-indigo-600 border border-indigo-500 py-3 rounded-lg font-medium hover:bg-indigo-50 transition-all"
+                >
+                  返回登录
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>

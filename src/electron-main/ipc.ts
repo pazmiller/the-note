@@ -1,4 +1,4 @@
-// src/main/ipc.ts
+// src/electron-main/ipc.ts
 import { ipcMain } from 'electron'
 import { cloudNotes } from './databaseFS'
 

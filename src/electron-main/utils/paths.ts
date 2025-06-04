@@ -1,4 +1,4 @@
-// src/main/utils/paths.ts
+// src/electron-main/utils/paths.ts
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
 

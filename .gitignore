@@ -1,4 +1,4 @@
-# Logs
+# Electron
 logs
 *.log
 npm-debug.log*
@@ -13,6 +13,12 @@ dist
 dist-ssr
 *.local
 
+# Build output
+dist/
+dist-electron/
+out/
+build/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -23,3 +29,18 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Env variables
+.env 
+.env.local 
+.env.production
+.env.*
+src/firebaseConfig.ts
+**/firebaseConfig.ts
+
+
+# Firebase related
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log

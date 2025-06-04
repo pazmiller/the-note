@@ -1,4 +1,4 @@
-// src/main/windows.ts
+// src/electron-main/windows.ts
 import { BrowserWindow } from 'electron'
 import { paths } from './utils/paths'
 

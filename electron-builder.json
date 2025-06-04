@@ -19,7 +19,7 @@
         ]
       }
     ],
-    "icon": "./build/BYZ.ico",
+    "icon": "./build/note_logo.ico",
     "certificateFile": "./build/note-test-certificate.pfx",
     "certificatePassword": "YourPassword"
   },
