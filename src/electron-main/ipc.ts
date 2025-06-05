@@ -1,6 +1,7 @@
 // src/electron-main/ipc.ts
 import { ipcMain } from 'electron'
 import { cloudNotes } from './databaseFS'
+// import { database } from './database'  // Uncomment if want to use the database locally
 
 export function setupIpcHandlers() {
   ipcMain.handle('create-note', async (_, title: string, content: string, uid:string='testUser') => {
